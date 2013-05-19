@@ -1,3 +1,7 @@
+Overview
+
+Restful web service to obtain Fibonacci series.
+
 Usage
 
 Point your http client or browser to http://your_sever_host:your_sever_port/fibonacci/n where n is an integer 0<= n < 999.  By default, corresponding fibonacci series stream as a xml document. Please note that only POST and GET are implemented which, for the purpose of this service instance, are treated interchangeably.
