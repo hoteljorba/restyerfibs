@@ -25,6 +25,7 @@ sys.setrecursionlimit(1100)
 
 import json
 import threading
+import exceptions
 from urlparse import urlparse
 from datetime import datetime
 
@@ -256,6 +257,7 @@ class FibonacciHandler(object):
         self.gMemo = gMemo
         self.memo_dict = memo
         self.memo = dict()
+        self.phi = (1 + 5**0.5) / 2
     
     
     def _fibNumber(self, n):
@@ -263,8 +265,19 @@ class FibonacciHandler(object):
             for future development when a service is wanted to estimate
             the nth fibonacci number only
         '''
-        return False, 'not implemented'
-    
+        try:
+            if n < 0:
+                msg = 'invalid n: %s'%n
+                raise Exception(msg)
+            
+            return True, int(round((self.phi**n - (1-self.phi)**n) / 5**0.5))
+        except exceptions.OverflowError, e:
+            msg ='overflow error. n=%s is too big for this memory space:%s'%(n, e)
+            return False, msg
+        except Exception, e:
+            msg = '_fibNumber calculation error for n=%s:%s'%(n, e)
+            return False, msg
+            
     
     def _fibSeries(self, n):
         '''
@@ -298,34 +311,41 @@ class FibonacciHandler(object):
         _data = None
         
         try:
-            if n < 0:
-                _status = False
-                _data = 'invalid parameter, n, :%s'%n
-            elif n > self.max_n:
-                _status = False
-                _data = 'this service limits the upper value of n to %s.'%self.max_n
-            elif n == 0:
-                _status = True
-                _data = 0
-                if series:
-                    _data = {0:0}
-            elif n == 1:
-                _status = True
-                _data = 1
-                if series:
-                    _data = {0:0, 1:1}
+            fstatus, fdata = self._fibNumber(n)
+            if not fstatus or not series:
+                _status = fstatus
+                _data = fdata
+                
             else:
-                try:
-                    self.memo = self.memo_dict.copy()
-                    self._fibSeries(n)
-                    _status = True
-                    if self.gMemo is None:
-                        _data = self.memo
-                    else:
-                        _data = self.gMemo.get(n, series=True)
-                except Exception, e:
-                    _data = '_fib recusrion failure for n=%s: %s'%(n, e)
+            
+                if n < 0:
                     _status = False
+                    _data = 'invalid parameter, n, :%s'%n
+                elif n > self.max_n:
+                    _status = False
+                    _data = 'this service limits the upper value of n to %s.'%self.max_n
+                elif n == 0:
+                    _status = True
+                    _data = 0
+                    if series:
+                        _data = {0:0}
+                elif n == 1:
+                    _status = True
+                    _data = 1
+                    if series:
+                        _data = {0:0, 1:1}
+                else:
+                    try:                    
+                        self.memo = self.memo_dict.copy()
+                        self._fibSeries(n)
+                        _status = True
+                        if self.gMemo is None:
+                            _data = self.memo
+                        else:
+                            _data = self.gMemo.get(n, series=True)
+                    except Exception, e:
+                        _data = '_fib recusrion failure for n=%s: %s'%(n, e)
+                        _status = False
         except Exception, e:
             _status = False
             _data = 'Fibonnacci Handler failure for n=%s: %s'%(n, e)

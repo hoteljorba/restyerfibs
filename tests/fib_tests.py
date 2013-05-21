@@ -11,6 +11,7 @@ import json
 import lxml
 import unittest
 import threading
+import exceptions
 from random import randrange
 from urlparse import urlparse
 from datetime import datetime
@@ -162,8 +163,17 @@ class FibonacciTest(unittest.TestCase):
         '''
             that method is not implemented so we want the test to reflect that
         '''
-        fH = FibonacciHandler()
-        self.assertEqual(fH._fibNumber(None), (False, 'not implemented'))    
+        for k,v in self.valid_fibs.items():
+            status, data = FibonacciHandler()._fibNumber(k)
+            self.assertTrue(status)
+            self.assertEqual(v, data)
+        
+        status, data = FibonacciHandler()._fibNumber(-1)
+        self.assertFalse(status)
+        
+        crazy_n = sys.maxint
+        status, data = FibonacciHandler()._fibNumber(crazy_n)
+        self.assertFalse(status)
     
     
     def testFibSeriesLMemo(self,):
@@ -222,7 +232,6 @@ class FibonacciTest(unittest.TestCase):
             s, d = fH.run(k)
             self.assertTrue(s)
             self.assertEqual(d[k], self.valid_fibs[k])
-    
     
 
 
